@@ -1,26 +1,29 @@
-FROM node:14-alpine
-## Stage 0
+# Base
+FROM node:12-alpine AS BUILD_IMAGE
+
 WORKDIR /app
+
+# Dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci 
+
+# Build
 COPY . .
 RUN npm run build
 
-## Stage 1
-FROM node:14-alpine
-RUN apk add --no-cache binutils && \
-  strip /usr/local/bin/node
-ENV NODE_ENV=production
-WORKDIR /app/build/
-COPY package*.json ./
-RUN npm install
-COPY --from=0 /app/dist ./dist/
+FROM node:12-alpine AS APP_IMAGE
 
-## Stage 2
-FROM node:14-alpine
 WORKDIR /app
-COPY --from=1 /app/build ./
+# installation of production dependencies
+COPY --from=BUILD_IMAGE /app/package*.json ./
+RUN npm install --only=production
+# copy only dist folder from build image
+COPY --from=BUILD_IMAGE /app/dist ./dist
+
+
+# Application
 USER node
 ENV PORT=8080
 EXPOSE 8080
-CMD ["node", "dist/main"]
+
+CMD ["node", "dist/main.js"]

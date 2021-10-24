@@ -1,0 +1,11 @@
+node_modules
+dist
+test
+.git
+.gitingore
+.prettierrc
+.eslintrc.js
+nest-cli.json
+.vscode
+.elasticbeanstalk
+README.md
